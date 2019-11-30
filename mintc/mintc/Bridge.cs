@@ -79,11 +79,9 @@ namespace mintc
 
             string projdata = Properties.Resources._mintc_dummy_project_csproj;
             projdata = projdata.Replace("[mintc-dummy-project]", name);
-            projdata = projdata.Replace("[mintc-post-build-cmdline]", "@echo off\necho Assembling NRO with mintc...\nmintc assemble --mode=$(Configuration) $(ProjectPath)");
+            projdata = projdata.Replace("[mintc-post-build-cmdline]", "@echo off\necho Assembling NRO with mintc...\nmintc assemble --mode=$(Configuration) --path=$(ProjectDir) $(TargetPath)");
             projdata = projdata.Replace("[mintc-bridge-min-ver]", bridgever);
             projdata = projdata.Replace("[mintc-bridge-core-ver]", bridgever);
-
-
             
             File.WriteAllText(csproj, projdata);
 

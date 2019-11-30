@@ -1,7 +1,7 @@
 using Bridge;
 using System;
 
-namespace mintnewdemo
+namespace MintTest
 {
     public class MintMain
     {

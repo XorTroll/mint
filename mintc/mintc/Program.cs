@@ -42,8 +42,11 @@ namespace mintc
             [Option("mode", HelpText = "Build mode (Debug/Release)", Required = true)]
             public string Mode { get; set; }
 
-            [Value(0, HelpText = "Input *.csproj file", Required = true)]
-            public string ProjectFile { get; set; }
+            [Option("path", HelpText = "Project path", Required = true)]
+            public string ProjectPath { get; set; }
+
+            [Value(0, HelpText = "Input generated *.dll file", Required = true)]
+            public string OutputDll { get; set; }
         }
 
         [Verb("create", HelpText = "Create a new Mint-Bridge.NET Visual Studio project.")]
@@ -61,7 +64,7 @@ namespace mintc
     {
         public static int RunAssemble(cmdline.AssembleOptions options)
         {
-            if(!File.Exists(options.ProjectFile)) cmdline.Utils.ThrowError("Invalid *.csproj file.");
+            if(!File.Exists(options.OutputDll)) cmdline.Utils.ThrowError("Invalid *.dll file. Make sure this is run after a clean and recompile.");
             if(options.Mode != "Debug" && options.Mode != "Release") cmdline.Utils.ThrowError("Invalid mode (must be Debug or Release)");
 
             var name = string.IsNullOrEmpty(options.Name) ? "Mint project" : options.Name;
@@ -69,16 +72,14 @@ namespace mintc
             var version = string.IsNullOrEmpty(options.Version) ? "0.0.0.0" : options.Version;
 
             var icon = (!string.IsNullOrEmpty(options.Icon) && File.Exists(options.Icon)) ? new Bitmap(options.Icon) : null;
+            var projname = Path.GetFileName(options.ProjectPath);
+            if(string.IsNullOrEmpty(projname) && options.ProjectPath.EndsWith(Path.DirectorySeparatorChar.ToString())) projname = Path.GetFileName(options.ProjectPath.TrimEnd(Path.DirectorySeparatorChar));
 
-            var projdir = Path.GetDirectoryName(options.ProjectFile);
-            var projname = Path.GetFileName(projdir);
-            var outdir = Path.Combine(projdir, "bin", options.Mode);
-            var outdll = Path.Combine(outdir, projname + ".dll");
-            if(!File.Exists(outdll)) cmdline.Utils.ThrowError("Unable to find the output release DLL. Make sure this is run after a clean and recompile.");
+            var outdir = Path.GetDirectoryName(options.OutputDll);
 
             try
             {
-                var dll = Assembly.LoadFile(outdll);
+                var dll = Assembly.LoadFile(options.OutputDll);
                 var info = dll.GetName();
                 name = info.Name;
                 version = info.Version.ToString();
@@ -130,6 +131,7 @@ namespace mintc
         public static int RunCreate(cmdline.CreateOptions options)
         {
             var path = (string.IsNullOrEmpty(options.Path)) ? Environment.CurrentDirectory : options.Path;
+            if(!Bridge.IsInstalled()) cmdline.Utils.ThrowError("Bridge CLI doesn't seem to be installed (or added to PATH). Install it from here: https://bridge.net/download/");
             var ok = Bridge.CreateBaseVisualStudioProject(path, options.Name);
             if(!ok) cmdline.Utils.ThrowError("Unable to create the project.");
 

@@ -13,8 +13,8 @@
     <ProjectGuid>{15779894-F793-4D27-99AA-7CE0F7E7E35C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>mintnewdemo</RootNamespace>
-    <AssemblyName>mintnewdemo</AssemblyName>
+    <RootNamespace>MintTest</RootNamespace>
+    <AssemblyName>MintTest</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -65,6 +65,6 @@
   <PropertyGroup>
     <PostBuildEvent>@echo off
 echo Assembling NRO with mintc...
-mintc assemble --mode=$(Configuration) $(ProjectPath)</PostBuildEvent>
+mintc assemble --mode=$(Configuration) --path=$(ProjectDir) $(TargetPath)</PostBuildEvent>
   </PropertyGroup>
 </Project>

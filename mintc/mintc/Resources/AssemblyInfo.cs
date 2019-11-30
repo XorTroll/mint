@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("[mintc-dummy-project]")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Mint C# homebrew project")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("HP Inc.")]
+[assembly: AssemblyCompany("Made using mint")]
 [assembly: AssemblyProduct("[mintc-dummy-project]")]
-[assembly: AssemblyCopyright("Copyright © HP Inc. 2019")]
+[assembly: AssemblyCopyright("Made using mint")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

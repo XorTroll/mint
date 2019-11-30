@@ -1,12 +1,13 @@
 
 #pragma once
-
 #include <console.hpp>
+#include <applet.hpp>
 
 namespace libmint
 {
     inline void InitializeModules()
     {
         console::InitializeModule();
+        applet::InitializeModule();
     }
 }

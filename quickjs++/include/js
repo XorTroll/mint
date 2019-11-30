@@ -24,6 +24,38 @@ namespace js
     static const auto Undefined = JS_UNDEFINED;
     static const auto Null = JS_NULL;
 
+    struct Buffer
+    {
+        void *buf;
+        size_t size;
+
+        static inline constexpr Buffer Make(void *buf, size_t size)
+        {
+            return { buf, size };
+        }
+    };
+
+    class Reference
+    {
+        public:
+            Reference()
+            {
+            }
+
+            Reference(JSContext *ctx, JSValue val) : js_ctx(ctx), orig_ref_object(val)
+            {
+            }
+
+            template<typename T>
+            void Set(T val);
+
+            template<typename T>
+            T Get();
+        private:
+            JSContext *js_ctx;
+            JSValue orig_ref_object;
+    };
+
     namespace impl
     {
         JSContext *GetCoreContextImpl();
@@ -31,6 +63,38 @@ namespace js
         std::string EvalImpl(std::string src, std::string eval_name);
 
         std::string EvalFileImpl(std::string path);
+
+        template<typename T>
+        T UnpackImpl(JSContext *ctx, JSValue val)
+        {
+            if constexpr(std::is_same<T, const char*>::value || std::is_same<T, std::string>::value) return JS_ToCString(ctx, val);
+            else if constexpr(std::is_arithmetic<T>::value)
+            {
+                double ret = 0.0f;
+                JS_ToFloat64(ctx, &ret, val);
+                return (T)ret;
+            }
+            else if constexpr(std::is_same<js::Buffer, T>::value)
+            {
+                js::Buffer buf = {};
+                buf.buf = JS_GetArrayBuffer(ctx, &buf.size, val);
+                return buf;
+            }
+            else if constexpr(std::is_same<Reference, T>::value) return T(ctx, val);
+            else if constexpr(std::is_same<JSValue, T>::value) return val;
+            return T();
+        }
+
+        template<typename T>
+        JSValue PackImpl(JSContext *ctx, T t)
+        {
+            if constexpr(std::is_same<T, const char*>::value) return JS_NewString(ctx, t);
+            else if constexpr(std::is_same<T, std::string>::value) return JS_NewString(ctx, t.c_str());
+            else if constexpr(std::is_arithmetic<T>::value) return JS_NewFloat64(ctx, (double)t);
+            else if constexpr(std::is_same<js::Buffer, T>::value) return JS_NewArrayBufferCopy(ctx, (const u8*)t.buf, t.size);
+            else if constexpr(std::is_same<JSValue, T>::value) return t;
+            return Undefined;
+        }
 
         class JsFunctionHelper
         {
@@ -63,30 +127,6 @@ namespace js
                 JSValueConst *fn_argv;
                 int h_argc;
         };
-
-        template<typename T>
-        T UnpackImpl(JSContext *ctx, JSValue val)
-        {
-            if constexpr(std::is_same<T, const char*>::value || std::is_same<T, std::string>::value) return JS_ToCString(ctx, val);
-            else if constexpr(std::is_arithmetic<T>::value)
-            {
-                double ret = 0.0f;
-                JS_ToFloat64(ctx, &ret, val);
-                return (T)ret;
-            }
-            else if constexpr(std::is_base_of<JSValue, T>::value) return val;
-            return T();
-        }
-
-        template<typename T>
-        JSValue PackImpl(JSContext *ctx, T t)
-        {
-            if constexpr(std::is_same<T, const char*>::value) return JS_NewString(ctx, t);
-            else if constexpr(std::is_same<T, std::string>::value) return JS_NewString(ctx, t.c_str());
-            else if constexpr(std::is_arithmetic<T>::value) return JS_NewFloat64(ctx, (double)t);
-            else if constexpr(std::is_base_of<JSValue, T>::value) return t;
-            return Undefined;
-        }
 
         template<typename T, typename ...Ts>
         struct ProcessValues
@@ -198,6 +238,18 @@ namespace js
         void ImportModuleImpl(std::string name);
     }
 
+    template<typename T>
+    void Reference::Set(T val)
+    {
+        JS_SetPropertyStr(this->js_ctx, this->orig_ref_object, "v", impl::PackImpl<T>(this->js_ctx, val));
+    }
+
+    template<typename T>
+    T Reference::Get()
+    {
+        return impl::UnpackImpl<T>(this->js_ctx, JS_GetPropertyStr(this->js_ctx, this->orig_ref_object, "v"));
+    }
+
     void Initialize();
     bool IsInitialized();
     void Finalize();
@@ -211,9 +263,9 @@ namespace js
     static size_t __js_fn_len_##name = 0; \
     static JSValue __js_fn_##name(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) \
     { \
+        js::impl::JsFunctionHelper helper(ctx, this_val, argc, argv); \
         std::function name = [&] __VA_ARGS__ ; \
         __js_fn_len_##name = js::impl::ParameterCount<decltype(name)>::Value; \
-        js::impl::JsFunctionHelper helper(ctx, this_val, argc, argv); \
         auto ret = js::impl::CallNativeFn<decltype(name)>::Impl(helper, name); \
         return js::impl::ProcessReturnImpl(ctx, ret); \
     }

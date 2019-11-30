@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("[mintc-dummy-project]")]
 [assembly: AssemblyDescription("Mint C# homebrew project")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Made using mint")]
+[assembly: AssemblyCompany("Made with mint")]
 [assembly: AssemblyProduct("[mintc-dummy-project]")]
-[assembly: AssemblyCopyright("Made using mint")]
+[assembly: AssemblyCopyright("Made with mint")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

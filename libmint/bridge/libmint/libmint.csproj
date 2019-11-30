@@ -38,7 +38,9 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuickJS\Std.cs" />
+    <Compile Include="Switch\Applet.cs" />
     <Compile Include="Switch\Console.cs" />
+    <Compile Include="Switch\Result.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="bridge.json" />

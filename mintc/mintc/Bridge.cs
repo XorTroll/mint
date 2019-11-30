@@ -96,6 +96,7 @@ namespace mintc
             var csprojprop = Path.Combine(csprojdir, "Properties");
             Directory.CreateDirectory(csprojprop);
             var asminfo = Properties.Resources.AssemblyInfo_cs;
+            asminfo = asminfo.Replace("[mintc-dummy-project]", name);
 
             File.WriteAllText(Path.Combine(csprojprop, "AssemblyInfo.cs"), asminfo);
             File.WriteAllBytes(Path.Combine(csprojdir, "bridge.json"), Properties.Resources.bridge_json);

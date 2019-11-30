@@ -1,0 +1,244 @@
+
+#pragma once
+
+#include <switch.h>
+#include <tuple>
+#include <functional>
+#include <string>
+#include <vector>
+
+extern "C"
+{
+    #include <math.h>
+    #include <quickjs/quickjs.h>
+    #include <quickjs/cutils.h>
+    #include <quickjs/quickjs-libc.h>
+
+    JSCFunctionListEntry __js_C_MakeNativeFunctionImpl(JSCFunction *fn, const char *name, int count);
+    JSCFunctionListEntry __js_C_MakeStringPropertyImpl(const char *name, const char *val, int flags);
+    JSCFunctionListEntry __js_C_MakeNumberPropertyImpl(const char *name, double val, int flags);
+}
+
+namespace js
+{
+    static const auto Undefined = JS_UNDEFINED;
+    static const auto Null = JS_NULL;
+
+    namespace impl
+    {
+        JSContext *GetCoreContextImpl();
+
+        std::string EvalImpl(std::string src, std::string eval_name);
+
+        std::string EvalFileImpl(std::string path);
+
+        class JsFunctionHelper
+        {
+            public:
+                JsFunctionHelper(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) : fn_ctx(ctx), fn_this(this_val), fn_argc(argc), fn_argv(argv), h_argc(0)
+                {
+                }
+
+                JSContext *GetContext()
+                {
+                    return this->fn_ctx;
+                }
+
+                JSValueConst PopArgv()
+                {
+                    auto val = this->fn_argv[this->h_argc];
+                    this->h_argc++;
+                    return val;
+                }
+
+                bool CanPopArgv()
+                {
+                    return (this->h_argc < this->fn_argc);
+                }
+
+            private:
+                JSContext *fn_ctx;
+                JSValueConst fn_this;
+                int fn_argc;
+                JSValueConst *fn_argv;
+                int h_argc;
+        };
+
+        template<typename T>
+        T UnpackImpl(JSContext *ctx, JSValue val)
+        {
+            if constexpr(std::is_same<T, const char*>::value || std::is_same<T, std::string>::value) return JS_ToCString(ctx, val);
+            else if constexpr(std::is_arithmetic<T>::value)
+            {
+                double ret = 0.0f;
+                JS_ToFloat64(ctx, &ret, val);
+                return (T)ret;
+            }
+            else if constexpr(std::is_base_of<JSValue, T>::value) return val;
+            return T();
+        }
+
+        template<typename T>
+        JSValue PackImpl(JSContext *ctx, T t)
+        {
+            if constexpr(std::is_same<T, const char*>::value) return JS_NewString(ctx, t);
+            else if constexpr(std::is_same<T, std::string>::value) return JS_NewString(ctx, t.c_str());
+            else if constexpr(std::is_arithmetic<T>::value) return JS_NewFloat64(ctx, (double)t);
+            else if constexpr(std::is_base_of<JSValue, T>::value) return t;
+            return Undefined;
+        }
+
+        template<typename T, typename ...Ts>
+        struct ProcessValues
+        {
+            typedef typename std::conditional<sizeof...(Ts) == 0, std::tuple<T>, std::tuple<T, Ts...>>::type TupleValue;
+
+            static void Impl(JsFunctionHelper &helper, TupleValue &tpl)
+            {
+                T param = T();
+                if(helper.CanPopArgv()) param = UnpackImpl<T>(helper.GetContext(), helper.PopArgv());
+                std::tuple<T> single = std::make_tuple(param);
+
+                if constexpr(sizeof...(Ts) > 0)
+                {
+                    std::tuple<Ts...> pack;
+                    ProcessValues<Ts...>::Impl(helper, pack);
+                    tpl = std::tuple_cat(single, pack);
+                }
+                else tpl = single;
+            }
+        };
+
+        template<typename Ret, typename ...Ts>
+        std::tuple<Ts...> ProcessParamsImpl(JsFunctionHelper &helper, std::function<Ret(Ts...)> &fn)
+        {
+            std::tuple<Ts...> tpl;
+            ProcessValues<Ts...>::Impl(helper, tpl);
+            return tpl;
+        }
+
+        template<typename T>
+        struct ParameterCount
+        {
+            static constexpr size_t Value = 0;
+        };
+
+        template<typename Ret>
+        struct ParameterCount<std::function<Ret()>>
+        {
+            static constexpr size_t Value = 0;
+        };
+
+        template<typename Ret, typename ...Ts>
+        struct ParameterCount<std::function<Ret(Ts...)>>
+        {
+            static constexpr size_t Value = sizeof...(Ts);
+        };
+
+        template<typename T>
+        struct CallNativeFn
+        {
+            static void Impl(JsFunctionHelper &helper, T t)
+            {
+            }
+        };
+
+        template<typename ...Ts>
+        struct CallNativeFn<std::function<void(Ts...)>>
+        {
+            static JSValue Impl(JsFunctionHelper &helper, std::function<void(Ts...)> fn)
+            {
+                if constexpr(sizeof...(Ts) == 0) fn();
+                else
+                {
+                    auto params = ProcessParamsImpl(helper, fn);
+                    std::apply(fn, params);
+                }
+                return Undefined;
+            }
+        };
+        
+        template<typename Ret, typename ...Ts>
+        struct CallNativeFn<std::function<Ret(Ts...)>>
+        {
+            static Ret Impl(JsFunctionHelper &helper, std::function<Ret(Ts...)> fn)
+            {
+                if constexpr(sizeof...(Ts) == 0)
+                {
+                    auto res = fn();
+                    return res;
+                }
+                else
+                {
+                    auto params = ProcessParamsImpl(helper, fn);
+                    auto res = std::apply(fn, params);
+                    return res;
+                }
+                return Ret();
+            }
+        };
+
+        void PushGlobalFunctionImpl(JSContext *ctx, JSCFunction fn, size_t arg_count, std::string name);
+
+        template<typename T>
+        JSValue ProcessReturnImpl(JSContext *ctx, T t)
+        {
+            return PackImpl(ctx, t);
+        }
+
+        template<typename T>
+        JSCFunctionListEntry MakePropertyImpl(std::string name, T val, int flags)
+        {
+            if constexpr(std::is_same<T, std::string>::value) return __js_C_MakeStringPropertyImpl(name.c_str(), val.c_str(), flags);
+            else if constexpr(std::is_same<T, const char*>::value) return __js_C_MakeStringPropertyImpl(name.c_str(), val, flags);
+            else if constexpr(std::is_arithmetic<T>::value) return __js_C_MakeNumberPropertyImpl(name.c_str(), (double)val, flags);
+            return {};
+        }
+
+        void ImportModuleImpl(std::string name);
+    }
+
+    void Initialize();
+    bool IsInitialized();
+    void Finalize();
+
+    void PushQuickJSModules();
+
+    std::string Evaluate(std::string js_src, std::string eval_name);
+    std::string EvaluateFromFile(std::string path);
+
+    #define JS_DEFINE_NATIVE_FN(name, ...) \
+    static size_t __js_fn_len_##name = 0; \
+    static JSValue __js_fn_##name(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) \
+    { \
+        std::function name = [&] __VA_ARGS__ ; \
+        __js_fn_len_##name = js::impl::ParameterCount<decltype(name)>::Value; \
+        js::impl::JsFunctionHelper helper(ctx, this_val, argc, argv); \
+        auto ret = js::impl::CallNativeFn<decltype(name)>::Impl(helper, name); \
+        return js::impl::ProcessReturnImpl(ctx, ret); \
+    }
+
+    #define JS_GLOBAL_EXPORT_NATIVE_FN(name) js::impl::PushGlobalFunctionImpl(js::impl::GetCoreContextImpl(), __js_fn_##name, __js_fn_len_##name, #name);
+
+    #define JS_MODULE_DECLARE_START(mod_name) static const JSCFunctionListEntry __js_mod_export_##mod_name[] = {
+
+    #define JS_MODULE_EXPORT_NATIVE_FN(name) __js_C_MakeNativeFunctionImpl(__js_fn_##name, #name, __js_fn_len_##name),
+    #define JS_MODULE_EXPORT_VARIABLE(name, value) js::impl::MakePropertyImpl<decltype(value)>(#name, value, JS_PROP_C_W_E),
+    #define JS_MODULE_EXPORT_CONSTANT(name, cvalue) js::impl::MakePropertyImpl<decltype(cvalue)>(#name, cvalue, JS_PROP_CONFIGURABLE),
+    #define JS_MODULE_DECLARE_END(mod_name) }; \
+    static int __js_mod_init_##mod_name(JSContext *ctx, JSModuleDef *mod) \
+    { \
+        return JS_SetModuleExportList(ctx, mod, __js_mod_export_##mod_name, countof(__js_mod_export_##mod_name)); \
+    }
+
+    #define JS_PUSH_MODULE(mod_name) \
+    { \
+        auto ctx = js::impl::GetCoreContextImpl(); \
+        auto mod = JS_NewCModule(ctx, #mod_name, __js_mod_init_##mod_name); \
+        if(mod != NULL) \
+        { \
+            JS_AddModuleExportList(ctx, mod, __js_mod_export_##mod_name, countof(__js_mod_export_##mod_name)); \
+            js::impl::ImportModuleImpl(#mod_name); \
+        } \
+    }
+}

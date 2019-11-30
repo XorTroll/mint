@@ -1,0 +1,10 @@
+.vscode/
+*.elf
+*.nacp
+*.nso
+*.nro
+*.pfs0
+obj/
+bin/
+.vs/
+build/

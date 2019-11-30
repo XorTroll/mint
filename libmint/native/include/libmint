@@ -1,0 +1,12 @@
+
+#pragma once
+
+#include <console.hpp>
+
+namespace libmint
+{
+    inline void InitializeModules()
+    {
+        console::InitializeModule();
+    }
+}

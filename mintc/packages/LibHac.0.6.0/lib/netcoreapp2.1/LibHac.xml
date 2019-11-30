@@ -1,0 +1,1115 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LibHac</name>
+    </assembly>
+    <members>
+        <member name="T:LibHac.BitReader.OffsetBias">
+            <summary>
+            Specifies the bias of an offset binary value. A positive bias can represent one more
+            positive value than negative value, and a negative bias can represent one more
+            negative value than positive value.
+            </summary>
+            <remarks>Example:
+            A 4-bit offset binary value with a positive bias can store
+            the values 8 through -7 inclusive.
+            A 4-bit offset binary value with a negative bias can store
+            the values 7 through -8 inclusive.</remarks>
+        </member>
+        <member name="T:LibHac.Common.Id128">
+            <summary>
+            A generic 128-bit ID value.
+            </summary>
+        </member>
+        <member name="M:LibHac.Common.StringUtils.Concat(System.Span{System.Byte},System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Concatenates 2 byte strings.
+            </summary>
+            <param name="dest"></param>
+            <param name="source"></param>
+            <returns>The length of the resulting string.</returns>
+            <remarks>This function appends the source string to the end of the null-terminated destination string.
+            If the destination buffer is not large enough to contain the resulting string,
+            bytes from the source string will be appended to the destination string util the buffer is full.
+            If the length of the final string is the same length of the destination buffer,
+            no null terminating byte will be written to the end of the string.</remarks>
+        </member>
+        <member name="T:LibHac.Compatibility.Env">
+            <summary>
+            Contains variables describing runtime environment info
+            needed for compatibility code.
+            </summary>
+        </member>
+        <member name="P:LibHac.FsService.FileSystemProxy.FsClient">
+            <summary>The client instance to be used for internal operations like save indexer access.</summary>
+        </member>
+        <member name="P:LibHac.FsService.FileSystemServer.FsClient">
+            <summary>The client instance to be used for internal operations like save indexer access.</summary>
+        </member>
+        <member name="M:LibHac.FsService.FileSystemServer.#ctor(LibHac.FsService.FileSystemServerConfig)">
+            <summary>
+            Creates a new <see cref="T:LibHac.FsService.FileSystemServer"/>.
+            </summary>
+            <param name="config">The configuration for the created <see cref="T:LibHac.FsService.FileSystemServer"/>.</param>
+        </member>
+        <member name="M:LibHac.FsService.FileSystemServer.CreateFileSystemClient">
+            <summary>
+            Creates a new <see cref="T:LibHac.Fs.FileSystemClient"/> using this <see cref="T:LibHac.FsService.FileSystemServer"/>'s
+            <see cref="T:LibHac.ITimeSpanGenerator"/> for the client's access log.
+            </summary>
+            <returns>The created <see cref="T:LibHac.Fs.FileSystemClient"/>.</returns>
+        </member>
+        <member name="M:LibHac.FsService.FileSystemServer.CreateFileSystemClient(LibHac.ITimeSpanGenerator)">
+            <summary>
+            Creates a new <see cref="T:LibHac.Fs.FileSystemClient"/>.
+            </summary>
+            <param name="timer">The <see cref="T:LibHac.ITimeSpanGenerator"/> to use for the created
+            <see cref="T:LibHac.Fs.FileSystemClient"/>'s access log.</param>
+            <returns>The created <see cref="T:LibHac.Fs.FileSystemClient"/>.</returns>
+        </member>
+        <member name="T:LibHac.FsService.FileSystemServerConfig">
+            <summary>
+            Contains the configuration for creating a new <see cref="T:LibHac.FsService.FileSystemServer"/>.
+            </summary>
+        </member>
+        <member name="P:LibHac.FsService.FileSystemServerConfig.FsCreators">
+            <summary>
+            The <see cref="T:LibHac.FsService.Creators.FileSystemCreators"/> used for creating filesystems.
+            </summary>
+        </member>
+        <member name="P:LibHac.FsService.FileSystemServerConfig.DeviceOperator">
+            <summary>
+            An <see cref="T:LibHac.FsService.IDeviceOperator"/> for managing the gamecard and SD card.
+            </summary>
+        </member>
+        <member name="P:LibHac.FsService.FileSystemServerConfig.ExternalKeySet">
+            <summary>
+            A keyset containing rights IDs and title keys.
+            If null, an empty set will be created.
+            </summary>
+        </member>
+        <member name="P:LibHac.FsService.FileSystemServerConfig.TimeSpanGenerator">
+            <summary>
+            Used for generating access log timestamps.
+            If null, a new <see cref="T:LibHac.StopWatchTimeSpanGenerator"/> will be created.
+            </summary>
+        </member>
+        <member name="T:LibHac.FsService.AccessPermissions">
+            <summary>
+            Permissions that control which filesystems or storages can be mounted or opened.
+            </summary>
+        </member>
+        <member name="T:LibHac.FsService.ActionPermissions">
+            <summary>
+            Permissions that control which actions can be performed.
+            </summary>
+        </member>
+        <member name="M:LibHac.FsSystem.Aes128CtrStorage.#ctor(LibHac.Fs.IStorage,System.Byte[],System.Int64,System.Byte[],System.Boolean)">
+            <summary>
+            Creates a new AES storage
+            </summary>
+            <param name="baseStorage">The input <see cref="T:LibHac.Fs.IStorage"/>.</param>
+            <param name="key">The decryption key.</param>
+            <param name="counterOffset">Offset to add to the counter.</param>
+            <param name="counterHi">The value of the upper 64 bits of the counter. Can be null.</param>
+            <param name="leaveOpen"><see langword="true"/> to leave the storage open after the <see cref="T:LibHac.FsSystem.Aes128CtrStorage"/> object is disposed; otherwise, <see langword="false"/>.</param>
+        </member>
+        <member name="M:LibHac.FsSystem.Aes128XtsTransform.TransformBlock(System.Byte[],System.Int32,System.Int32,System.UInt64)">
+            <summary>
+            Transforms a single block.
+            </summary>
+            <param name="buffer"> The input for which to compute the transform.</param>
+            <param name="offset">The offset into the byte array from which to begin using data.</param>
+            <param name="count">The number of bytes in the byte array to use as data.</param>
+            <param name="sector">The sector number of the block</param>
+            <returns>The number of bytes written.</returns>
+        </member>
+        <member name="M:LibHac.FsSystem.Aes128XtsTransform.FillArrayFromSector(System.Byte[],System.UInt64)">
+            <summary>
+            Fills a byte array from a sector number (little endian)
+            </summary>
+            <param name="value">The destination</param>
+            <param name="sector">The sector number</param>
+        </member>
+        <member name="M:LibHac.FsSystem.Aes128XtsTransform.TweakCrypt(System.Byte[],System.Int32,System.Byte[],System.Int32,System.Byte[])">
+            <summary>
+            Performs the Xts TweakCrypt operation
+            </summary>
+        </member>
+        <member name="M:LibHac.FsSystem.Aes128XtsTransform.MultiplyByX(System.Byte[])">
+            <summary>
+            Multiply by x
+            </summary>
+            <param name="i">The value to multiply by x (LFSR shift)</param>
+        </member>
+        <member name="M:LibHac.FsSystem.AesXtsDirectory.GetAesXtsFileSize(System.String)">
+            <summary>
+            Reads the size of a NAX0 file from its header. Returns 0 on error.
+            </summary>
+            <param name="path"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LibHac.FsSystem.AesXtsFileSystem.CreateFile(System.String,System.Int64,LibHac.Fs.CreateFileOptions,System.Byte[])">
+            <summary>
+            Creates a new <see cref="T:LibHac.FsSystem.AesXtsFile"/> using the provided key.
+            </summary>
+            <param name="path">The full path of the file to create.</param>
+            <param name="size">The initial size of the created file.</param>
+            <param name="options">Flags to control how the file is created.
+            Should usually be <see cref="F:LibHac.Fs.CreateFileOptions.None"/></param>
+            <param name="key">The 256-bit key containing a 128-bit data key followed by a 128-bit tweak key.</param>
+        </member>
+        <member name="T:LibHac.FsSystem.ConcatenationFileSystem">
+             <summary>
+             An <see cref="T:LibHac.Fs.IFileSystem"/> that stores large files as smaller, separate sub-files.
+             </summary>
+             <remarks>
+             This filesystem is mainly used to allow storing large files on filesystems that have low
+             limits on file size such as FAT filesystems. The underlying base filesystem must have
+             support for the "Archive" file attribute found in FAT or NTFS filesystems.
+            
+             A <see cref="T:LibHac.FsSystem.ConcatenationFileSystem"/> may contain both standard files or Concatenation files.
+             If a directory has the archive attribute set, its contents will be concatenated and treated
+             as a single file. These sub-files must follow the naming scheme "00", "01", "02", ...
+             Each sub-file except the final one must have the size <see cref="P:LibHac.FsSystem.ConcatenationFileSystem.SubFileSize"/> that was specified
+             at the creation of the <see cref="T:LibHac.FsSystem.ConcatenationFileSystem"/>.
+             </remarks>
+        </member>
+        <member name="M:LibHac.FsSystem.ConcatenationFileSystem.#ctor(LibHac.Fs.IAttributeFileSystem)">
+            <summary>
+            Initializes a new <see cref="T:LibHac.FsSystem.ConcatenationFileSystem"/>.
+            </summary>
+            <param name="baseFileSystem">The base <see cref="T:LibHac.Fs.IAttributeFileSystem"/> for the
+            new <see cref="T:LibHac.FsSystem.ConcatenationFileSystem"/>.</param>
+        </member>
+        <member name="M:LibHac.FsSystem.ConcatenationFileSystem.#ctor(LibHac.Fs.IAttributeFileSystem,System.Int64)">
+            <summary>
+            Initializes a new <see cref="T:LibHac.FsSystem.ConcatenationFileSystem"/>.
+            </summary>
+            <param name="baseFileSystem">The base <see cref="T:LibHac.Fs.IAttributeFileSystem"/> for the
+            new <see cref="T:LibHac.FsSystem.ConcatenationFileSystem"/>.</param>
+            <param name="subFileSize">The size of each sub-file. Once a file exceeds this size, a new sub-file will be created</param>
+        </member>
+        <member name="P:LibHac.FsSystem.HierarchicalIntegrityVerificationStorage.LevelValidities">
+            <summary>
+            An array of the hash statuses of every block in each level.
+            </summary>
+        </member>
+        <member name="M:LibHac.FsSystem.HierarchicalIntegrityVerificationStorage.Validate(System.Boolean,LibHac.IProgressReport)">
+            <summary>
+            Checks the hashes of any unchecked blocks and returns the <see cref="T:LibHac.Validity"/> of the data.
+            </summary>
+            <param name="returnOnError">If <see langword="true"/>, return as soon as an invalid block is found.</param>
+            <param name="logger">An optional <see cref="T:LibHac.IProgressReport"/> for reporting progress.</param>
+            <returns>The <see cref="T:LibHac.Validity"/> of the data of the specified hash level.</returns>
+        </member>
+        <member name="T:LibHac.FsSystem.IntegrityVerificationInfo">
+            <summary>
+            Information for creating an <see cref="T:LibHac.FsSystem.IntegrityVerificationStorage"/>
+            </summary>
+        </member>
+        <member name="T:LibHac.FsSystem.IntegrityCheckLevel">
+            <summary>
+            Represents the level of integrity checks to be performed.
+            </summary>
+        </member>
+        <member name="F:LibHac.FsSystem.IntegrityCheckLevel.None">
+            <summary>
+            No integrity checks will be performed.
+            </summary>
+        </member>
+        <member name="F:LibHac.FsSystem.IntegrityCheckLevel.IgnoreOnInvalid">
+            <summary>
+            Invalid blocks will be marked as invalid when read, and will not cause an error.
+            </summary>
+        </member>
+        <member name="F:LibHac.FsSystem.IntegrityCheckLevel.ErrorOnInvalid">
+            <summary>
+            An <see cref="T:System.IO.InvalidDataException"/> will be thrown if an integrity check fails.
+            </summary>
+        </member>
+        <member name="M:LibHac.FsSystem.LocalFileSystem.#ctor(System.String)">
+            <summary>
+            Opens a directory on local storage as an <see cref="T:LibHac.Fs.IFileSystem"/>.
+            The directory will be created if it does not exist.
+            </summary>
+            <param name="basePath">The path that will be the root of the <see cref="T:LibHac.FsSystem.LocalFileSystem"/>.</param>
+        </member>
+        <member name="T:LibHac.FsSystem.NullStorage">
+            <summary>
+            An <see cref="T:LibHac.Fs.IStorage"/> that returns all zeros when read, and does nothing on write.
+            </summary>
+        </member>
+        <member name="M:LibHac.FsSystem.PartitionFileSystemBuilder.#ctor(LibHac.Fs.IFileSystem)">
+            <summary>
+            Creates a new <see cref="T:LibHac.FsSystem.PartitionFileSystemBuilder"/> and populates it with all
+            the files in the root directory.
+            </summary>
+        </member>
+        <member name="T:LibHac.FsSystem.PathParser">
+            <summary>
+            Enumerates a file or directory path one segment at a time.
+            </summary>
+            <remarks>When the parser is initialized <see cref="M:LibHac.FsSystem.PathParser.GetCurrent"/>
+            will return the root directory name, i.e. an empty string.</remarks>
+        </member>
+        <member name="M:LibHac.FsSystem.PathParser.TryGetNext(System.ReadOnlySpan{System.Byte}@)">
+            <summary>
+            Moves the iterator to the next segment in the path and gets the name of that segment.
+            </summary>
+            <param name="name">When this method returns, contains the path segment's name.</param>
+            <returns><see langword="true"/> if the <see cref="T:LibHac.FsSystem.PathParser"/> was able to
+            move to the next path segment.
+            <see langword="false"/> if there are no remaining path segments.</returns>
+        </member>
+        <member name="M:LibHac.FsSystem.PathParser.MoveNext">
+            <summary>
+            Moves the iterator to the next segment in the path.
+            </summary>
+            <returns><see langword="true"/> if the <see cref="T:LibHac.FsSystem.PathParser"/> was able to
+            move to the next path segment.
+            <see langword="false"/> if there are no remaining path segments.</returns>
+        </member>
+        <member name="M:LibHac.FsSystem.PathParser.GetCurrent">
+            <summary>
+            Gets the current path segment's name.
+            </summary>
+            <returns>The current path segment.</returns>
+        </member>
+        <member name="M:LibHac.FsSystem.PathParser.IsFinished">
+            <summary>
+            Checks if the current path segment is the final one.
+            </summary>
+            <returns><see langword="true"/> if the current path segment is the final one.</returns>
+        </member>
+        <member name="M:LibHac.FsSystem.PathTools.IsSubPath(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})">
+            <summary>
+            Checks if either of the 2 paths is a sub-path of the other. Input paths must be normalized.
+            </summary>
+            <param name="path1">The first path to be compared.</param>
+            <param name="path2">The second path to be compared.</param>
+            <returns></returns>
+        </member>
+        <member name="M:LibHac.FsSystem.PathTools.IsSubPath(System.ReadOnlySpan{System.Byte},System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Checks if either of the 2 paths is a sub-path of the other. Input paths must be normalized.
+            </summary>
+            <param name="path1">The first path to be compared.</param>
+            <param name="path2">The second path to be compared.</param>
+            <returns></returns>
+        </member>
+        <member name="T:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1">
+             <summary>
+             Represents the file table used by the RomFS format.
+             </summary>
+             <typeparam name="T">The type of the value to be stored for each file entry.</typeparam>
+             <remarks>
+             This file table stores the structure of the file tree in a RomFS.
+             Each file or directory entry is stored in the table using its full path as a key.
+             Once added, a file or directory is assigned an ID that can also be used to retrieve it.
+             Each file entry contains a structure of type <typeparamref name="T"/>.
+             In a standard RomFS, this includes the size of the file and its offset in the RomFS.
+             Each directory entry contains the IDs for its first child file and first child directory.
+            
+             The table is represented by four byte arrays. Two of the arrays contain the hash buckets and
+             entries for the files, and the other two for the directories.
+             
+             Once all files have been added to the table, <see cref="M:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1.TrimExcess"/> should be called
+             to optimize the size of the table.
+             </remarks>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1.#ctor(LibHac.Fs.IStorage,LibHac.Fs.IStorage,LibHac.Fs.IStorage,LibHac.Fs.IStorage)">
+            <summary>
+            Initializes a <see cref="T:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1"/> from an existing table.
+            </summary>
+            <param name="dirHashTable"></param>
+            <param name="dirEntryTable"></param>
+            <param name="fileHashTable"></param>
+            <param name="fileEntryTable"></param>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1.#ctor">
+            <summary>
+            Initializes a new <see cref="T:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1"/> that has the default initial capacity.
+            </summary>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Initializes a new <see cref="T:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1"/> that has the specified initial capacity.
+            </summary>
+            <param name="directoryCapacity">The initial number of directories that the
+            <see cref="T:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1"/> can contain.</param>
+            <param name="fileCapacity">The initial number of files that the
+            <see cref="T:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1"/> can contain.</param>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1.TryOpenDirectory(System.String,LibHac.FsSystem.RomFs.FindPosition@)">
+            <summary>
+            Opens a directory for enumeration.
+            </summary>
+            <param name="path">The full path of the directory to open.</param>
+            <param name="position">The initial position of the directory enumerator.</param>
+            <returns><see langword="true"/> if the table contains a directory with the specified path;
+            otherwise, <see langword="false"/>.</returns>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1.TryOpenDirectory(System.Int32,LibHac.FsSystem.RomFs.FindPosition@)">
+            <summary>
+            Opens a directory for enumeration.
+            </summary>
+            <param name="directoryId">The ID of the directory to open.</param>
+            <param name="position">When this method returns, contains the initial position of the directory enumerator.</param>
+            <returns><see langword="true"/> if the table contains a directory with the specified path;
+            otherwise, <see langword="false"/>.</returns>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1.FindNextFile(LibHac.FsSystem.RomFs.FindPosition@,`0@,System.String@)">
+            <summary>
+            Returns the next file in a directory and updates the enumerator's position.
+            </summary>
+            <param name="position">The current position of the directory enumerator.
+            This position will be updated when the method returns.</param>
+            <param name="info">When this method returns, contains the file's metadata.</param>
+            <param name="name">When this method returns, contains the file's name (Not the full path).</param>
+            <returns><see langword="true"/> if the next file was successfully returned.
+            <see langword="false"/> if there are no more files to enumerate.</returns>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1.FindNextDirectory(LibHac.FsSystem.RomFs.FindPosition@,System.String@)">
+            <summary>
+            Returns the next child directory in a directory and updates the enumerator's position.
+            </summary>
+            <param name="position">The current position of the directory enumerator.
+            This position will be updated when the method returns.</param>
+            <param name="name">When this method returns, contains the directory's name (Not the full path).</param>
+            <returns><see langword="true"/> if the next directory was successfully returned.
+            <see langword="false"/> if there are no more directories to enumerate.</returns>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1.AddFile(System.String,`0@)">
+            <summary>
+            Adds a file to the file table. If the file already exists
+            its <see cref="T:LibHac.FsSystem.RomFs.RomFileInfo"/> will be updated.
+            </summary>
+            <param name="path">The full path of the file to be added.</param>
+            <param name="fileInfo">The file information to be stored.</param>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1.AddDirectory(System.String)">
+            <summary>
+            Adds a directory to the file table. If the directory already exists,
+            no action is performed.
+            </summary>
+            <param name="path">The full path of the directory to be added.</param>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.HierarchicalRomFileTable`1.TrimExcess">
+            <summary>
+            Sets the capacity of this dictionary to what it would be if
+            it had been originally initialized with all its entries.
+            
+            This method can be used to minimize the memory overhead 
+            once it is known that no new elements will be added.
+            </summary>
+        </member>
+        <member name="T:LibHac.FsSystem.RomFs.RomFsBuilder">
+            <summary>
+            Builds a RomFS from a collection of files.
+            </summary>
+            <remarks>A <see cref="T:LibHac.FsSystem.RomFs.RomFsBuilder"/> produces a view of a RomFS archive.
+            When doing so, it will create an <see cref="T:LibHac.Fs.IStorage"/> instance that will
+            provide the RomFS data when read. Random seek is supported.</remarks>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.RomFsBuilder.#ctor">
+            <summary>
+            Creates a new, empty <see cref="T:LibHac.FsSystem.RomFs.RomFsBuilder"/>
+            </summary>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.RomFsBuilder.#ctor(LibHac.Fs.IFileSystem)">
+            <summary>
+            Creates a new <see cref="T:LibHac.FsSystem.RomFs.RomFsBuilder"/> and populates it with all
+            the files in the specified <see cref="T:LibHac.Fs.IFileSystem"/>.
+            </summary>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.RomFsBuilder.AddFile(System.String,LibHac.Fs.IFile)">
+            <summary>
+            Adds a file to the RomFS.
+            </summary>
+            <param name="path">The full path in the RomFS</param>
+            <param name="file">An <see cref="T:LibHac.Fs.IFile"/> of the file data to add.</param>
+        </member>
+        <member name="M:LibHac.FsSystem.RomFs.RomFsBuilder.Build">
+            <summary>
+            Returns a view of a RomFS containing all the currently added files.
+            Additional files may be added and a new view produced without
+            invalidating previously built RomFS views.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:LibHac.FsSystem.RomFs.FindPosition">
+            <summary>
+            Represents the current position when enumerating a directory's contents.
+            </summary>
+        </member>
+        <member name="F:LibHac.FsSystem.RomFs.FindPosition.NextDirectory">
+            <summary>The ID of the next directory to be enumerated.</summary>
+        </member>
+        <member name="F:LibHac.FsSystem.RomFs.FindPosition.NextFile">
+            <summary>The ID of the next file to be enumerated.</summary>
+        </member>
+        <member name="M:LibHac.FsSystem.Save.AllocationTable.Join(System.Int32,System.Int32)">
+            <summary>
+            Combines 2 lists into one list. The second list will be attached to the end of the first list.
+            </summary>
+            <param name="frontListBlockIndex">The index of the start block of the first list.</param>
+            <param name="backListBlockIndex">The index of the start block of the second list.</param>
+        </member>
+        <member name="M:LibHac.FsSystem.Save.AllocationTable.Trim(System.Int32,System.Int32)">
+            <summary>
+            Trims an existing list to the specified length and returns the excess blocks as a new list.
+            </summary>
+            <param name="listHeadBlockIndex">The starting block of the list to trim.</param>
+            <param name="newListLength">The length in blocks that the list will be shortened to.</param>
+            <returns>The index of the head node of the removed blocks.</returns>
+        </member>
+        <member name="M:LibHac.FsSystem.Save.AllocationTable.Split(System.Int32,System.Int32)">
+            <summary>
+            Splits a single list segment into 2 segments. The sequence of blocks in the full list will remain the same.
+            </summary>
+            <param name="segmentBlockIndex">The block index of the segment to split.</param>
+            <param name="firstSubSegmentLength">The length of the first subsegment.</param>
+        </member>
+        <member name="M:LibHac.FsSystem.Save.RemapStorage.#ctor(LibHac.Fs.IStorage,LibHac.Fs.IStorage,LibHac.Fs.IStorage,System.Boolean)">
+            <summary>
+            Creates a new <see cref="T:LibHac.FsSystem.Save.RemapStorage"/>
+            </summary>
+            <param name="storage">A <see cref="T:LibHac.Fs.IStorage"/> of the main data of the RemapStream.
+            The <see cref="T:LibHac.FsSystem.Save.RemapStorage"/> object assumes complete ownership of the Storage.</param>
+            <param name="header">The header for this RemapStorage.</param>
+            <param name="mapEntries">The remapping entries for this RemapStorage.</param>
+            <param name="leaveOpen"><see langword="true"/> to leave the storage open after the <see cref="T:LibHac.FsSystem.Save.RemapStorage"/> object is disposed; otherwise, <see langword="false"/>.</param>
+        </member>
+        <member name="T:LibHac.FsSystem.Save.SaveFindPosition">
+            <summary>
+            Represents the current position when enumerating a directory's contents.
+            </summary>
+        </member>
+        <member name="F:LibHac.FsSystem.Save.SaveFindPosition.NextDirectory">
+            <summary>The ID of the next directory to be enumerated.</summary>
+        </member>
+        <member name="F:LibHac.FsSystem.Save.SaveFindPosition.NextFile">
+            <summary>The ID of the next file to be enumerated.</summary>
+        </member>
+        <member name="M:LibHac.FsSystem.Save.SaveFsList`1.TryGetValue(System.Int32,`0@,System.Span{System.Byte}@)">
+            <summary>
+            Gets the value and name associated with the specific index.
+            </summary>
+            <param name="index">The index of the value to get.</param>
+            <param name="value">Contains the corresponding value if the method returns <see langword="true"/>.</param>
+            <param name="name">The name of the given index will be written to this span if the method returns <see langword="true"/>.
+            This span must be at least <see cref="P:LibHac.FsSystem.Save.SaveFsList`1.MaxNameLength"/> bytes long.</param>
+            <returns><see langword="true"/> if the <see cref="T:LibHac.FsSystem.Save.SaveFsList`1"/> contains an element with
+            the specified key; otherwise, <see langword="false"/>.</returns>
+        </member>
+        <member name="M:LibHac.FsSystem.Save.SaveFsList`1.GetValue(System.Int32,`0@,System.Span{System.Byte}@)">
+            <summary>
+            Gets the value and name associated with the specific index.
+            </summary>
+            <param name="index">The index of the value to get.</param>
+            <param name="value">Contains the corresponding value when the method returns.</param>
+            <param name="name">The name of the given index will be written to this span when the method returns.
+            This span must be at least <see cref="P:LibHac.FsSystem.Save.SaveFsList`1.MaxNameLength"/> bytes long.</param>
+        </member>
+        <member name="M:LibHac.FsSystem.SectorStorage.ValidateSize(System.Int64,System.Int64)">
+            <summary>
+            Validates that the size is a multiple of the sector size
+            </summary>
+        </member>
+        <member name="T:LibHac.FsSystem.StreamFile">
+            <summary>
+            Provides an <see cref="T:LibHac.Fs.IFile"/> interface for interacting with a <see cref="T:System.IO.Stream"/>
+            </summary>
+        </member>
+        <member name="M:LibHac.FsSystem.ValueStringBuilder.GetPinnableReference">
+            <summary>
+            Get a pinnable reference to the builder.
+            Does not ensure there is a null char after <see cref="P:LibHac.FsSystem.ValueStringBuilder.Length"/>
+            This overload is pattern matched in the C# 7.3+ compiler so you can omit
+            the explicit method call, and write eg "fixed (char* c = builder)"
+            </summary>
+        </member>
+        <member name="M:LibHac.FsSystem.ValueStringBuilder.GetPinnableReference(System.Boolean)">
+            <summary>
+            Get a pinnable reference to the builder.
+            </summary>
+            <param name="terminate">Ensures that the builder has a null char after <see cref="P:LibHac.FsSystem.ValueStringBuilder.Length"/></param>
+        </member>
+        <member name="P:LibHac.FsSystem.ValueStringBuilder.RawChars">
+            <summary>Returns the underlying storage of the builder.</summary>
+        </member>
+        <member name="M:LibHac.FsSystem.ValueStringBuilder.AsSpan(System.Boolean)">
+            <summary>
+            Returns a span around the contents of the builder.
+            </summary>
+            <param name="terminate">Ensures that the builder has a null char after <see cref="P:LibHac.FsSystem.ValueStringBuilder.Length"/></param>
+        </member>
+        <member name="T:LibHac.Fs.OpenMode">
+            <summary>
+            Specifies which operations are available on an <see cref="T:LibHac.Fs.IFile"/>.
+            </summary>
+        </member>
+        <member name="T:LibHac.Fs.IDirectory">
+            <summary>
+            Provides an interface for enumerating the child entries of a directory.
+            </summary>
+        </member>
+        <member name="M:LibHac.Fs.IDirectory.Read(System.Int64@,System.Span{LibHac.Fs.DirectoryEntry})">
+            <summary>
+            Retrieves the next entries that this directory contains. Does not search subdirectories.
+            </summary>
+            <param name="entriesRead">The number of <see cref="T:LibHac.Fs.DirectoryEntry"/>s that
+            were read into <paramref name="entryBuffer"/>.</param>
+            <param name="entryBuffer">The buffer the entries will be read into.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>With each call of <see cref="M:LibHac.Fs.IDirectory.Read(System.Int64@,System.Span{LibHac.Fs.DirectoryEntry})"/>, the <see cref="T:LibHac.Fs.IDirectory"/> object will
+            continue to iterate through all the entries it contains.
+            Each call will attempt to read as many entries as the buffer can contain.
+            Once all the entries have been read, all subsequent calls to <see cref="M:LibHac.Fs.IDirectory.Read(System.Int64@,System.Span{LibHac.Fs.DirectoryEntry})"/> will
+            read 0 entries into the buffer.</remarks>
+        </member>
+        <member name="M:LibHac.Fs.IDirectory.GetEntryCount(System.Int64@)">
+            <summary>
+            Retrieves the number of file system entries that this directory contains. Does not search subdirectories.
+            </summary>
+            <param name="entryCount">The number of child entries the directory contains.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+        </member>
+        <member name="T:LibHac.Fs.IFile">
+             <summary>
+             Provides an interface for reading and writing a sequence of bytes.
+             </summary>
+             <remarks><see cref="T:LibHac.Fs.IFile"/> is similar to <see cref="T:LibHac.Fs.IStorage"/>, and has a few main differences:
+             
+             - <see cref="T:LibHac.Fs.IFile"/> allows an <see cref="T:LibHac.Fs.OpenMode"/> to be set that controls read, write
+             and append permissions for the file.
+            
+             - If the <see cref="T:LibHac.Fs.IFile"/> cannot read or write as many bytes as requested, it will read
+             or write as many bytes as it can and return that number of bytes to the caller.
+            
+             - If <see cref="M:LibHac.Fs.IFile.Write(System.Int64,System.ReadOnlySpan{System.Byte},LibHac.Fs.WriteOption)"/> is called on an offset past the end of the <see cref="T:LibHac.Fs.IFile"/>,
+             the <see cref="F:LibHac.Fs.OpenMode.AllowAppend"/> mode is set and the file supports expansion,
+             the file will be expanded so that it is large enough to contain the written data.</remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFile.Read(System.Int64@,System.Int64,System.Span{System.Byte},LibHac.Fs.ReadOption)">
+            <summary>
+            Reads a sequence of bytes from the current <see cref="T:LibHac.Fs.IFile"/>.
+            </summary>
+            <param name="bytesRead">If the operation returns successfully, The total number of bytes read into
+            the buffer. This can be less than the size of the buffer if the IFile is too short to fulfill the request.</param>
+            <param name="offset">The offset in the <see cref="T:LibHac.Fs.IFile"/> at which to begin reading.</param>
+            <param name="destination">The buffer where the read bytes will be stored.
+            The number of bytes read will be no larger than the length of the buffer.</param>
+            <param name="options">Options for reading from the <see cref="T:LibHac.Fs.IFile"/>.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+        </member>
+        <member name="M:LibHac.Fs.IFile.Write(System.Int64,System.ReadOnlySpan{System.Byte},LibHac.Fs.WriteOption)">
+            <summary>
+            Writes a sequence of bytes to the current <see cref="T:LibHac.Fs.IFile"/>.
+            </summary>
+            <param name="offset">The offset in the <see cref="T:LibHac.Fs.IStorage"/> at which to begin writing.</param>
+            <param name="source">The buffer containing the bytes to be written.</param>
+            <param name="options">Options for writing to the <see cref="T:LibHac.Fs.IFile"/>.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+        </member>
+        <member name="M:LibHac.Fs.IFile.Flush">
+            <summary>
+            Causes any buffered data to be written to the underlying device.
+            </summary>
+        </member>
+        <member name="M:LibHac.Fs.IFile.SetSize(System.Int64)">
+            <summary>
+            Sets the size of the file in bytes.
+            </summary>
+            <param name="size">The desired size of the file in bytes.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+        </member>
+        <member name="M:LibHac.Fs.IFile.GetSize(System.Int64@)">
+            <summary>
+            Gets the number of bytes in the file.
+            </summary>
+            <param name="size">If the operation returns successfully, the length of the file in bytes.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+        </member>
+        <member name="M:LibHac.Fs.IFile.OperateRange(System.Span{System.Byte},LibHac.Fs.OperationId,System.Int64,System.Int64,System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Performs various operations on the file. Used to extend the functionality of the <see cref="T:LibHac.Fs.IFile"/> interface.
+            </summary>
+            <param name="outBuffer">A buffer that will contain the response from the operation.</param>
+            <param name="operationId">The operation to be performed.</param>
+            <param name="offset">The offset of the range to operate on.</param>
+            <param name="size">The size of the range to operate on.</param>
+            <param name="inBuffer">An input buffer. Size may vary depending on the operation performed.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+        </member>
+        <member name="T:LibHac.Fs.IFileSystem">
+            <summary>
+            Provides an interface for accessing a file system. <c>/</c> is used as the path delimiter.
+            </summary>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.CreateFile(System.String,System.Int64,LibHac.Fs.CreateFileOptions)">
+            <summary>
+            Creates or overwrites a file at the specified path.
+            </summary>
+            <param name="path">The full path of the file to create.</param>
+            <param name="size">The initial size of the created file.</param>
+            <param name="options">Flags to control how the file is created.
+            Should usually be <see cref="F:LibHac.Fs.CreateFileOptions.None"/></param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>
+            The following <see cref="T:LibHac.Result"/> codes may be returned under certain conditions:
+            
+            The parent directory of the specified path does not exist: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            Specified path already exists as either a file or directory: <see cref="P:LibHac.Fs.ResultFs.PathAlreadyExists"/>
+            Insufficient free space to create the file: <see cref="P:LibHac.Fs.ResultFs.InsufficientFreeSpace"/>
+            </remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.DeleteFile(System.String)">
+            <summary>
+            Deletes the specified file.
+            </summary>
+            <param name="path">The full path of the file to delete.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>
+            The following <see cref="T:LibHac.Result"/> codes may be returned under certain conditions:
+            
+            The specified path does not exist or is a directory: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            </remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.CreateDirectory(System.String)">
+            <summary>
+            Creates all directories and subdirectories in the specified path unless they already exist.
+            </summary>
+            <param name="path">The full path of the directory to create.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>
+            The following <see cref="T:LibHac.Result"/> codes may be returned under certain conditions:
+            
+            The parent directory of the specified path does not exist: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            Specified path already exists as either a file or directory: <see cref="P:LibHac.Fs.ResultFs.PathAlreadyExists"/>
+            Insufficient free space to create the directory: <see cref="P:LibHac.Fs.ResultFs.InsufficientFreeSpace"/>
+            </remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.DeleteDirectory(System.String)">
+            <summary>
+            Deletes the specified directory.
+            </summary>
+            <param name="path">The full path of the directory to delete.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>
+            The following <see cref="T:LibHac.Result"/> codes may be returned under certain conditions:
+            
+            The specified path does not exist or is a file: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            The specified directory is not empty: <see cref="P:LibHac.Fs.ResultFs.DirectoryNotEmpty"/>
+            </remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.DeleteDirectoryRecursively(System.String)">
+            <summary>
+            Deletes the specified directory and any subdirectories and files in the directory.
+            </summary>
+            <param name="path">The full path of the directory to delete.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>
+            The following <see cref="T:LibHac.Result"/> codes may be returned under certain conditions:
+            
+            The specified path does not exist or is a file: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            </remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.CleanDirectoryRecursively(System.String)">
+            <summary>
+            Deletes any subdirectories and files in the specified directory.
+            </summary>
+            <param name="path">The full path of the directory to clean.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>
+            The following <see cref="T:LibHac.Result"/> codes may be returned under certain conditions:
+            
+            The specified path does not exist or is a file: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            </remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.RenameFile(System.String,System.String)">
+            <summary>
+            Renames or moves a file to a new location.
+            </summary>
+            <param name="oldPath">The full path of the file to rename.</param>
+            <param name="newPath">The new full path of the file.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>
+            If <paramref name="oldPath"/> and <paramref name="newPath"/> are the same, this function does nothing and returns successfully.
+            The following <see cref="T:LibHac.Result"/> codes may be returned under certain conditions:
+            
+            <paramref name="oldPath"/> does not exist or is a directory: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            <paramref name="newPath"/>'s parent directory does not exist: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            <paramref name="newPath"/> already exists as either a file or directory: <see cref="P:LibHac.Fs.ResultFs.PathAlreadyExists"/>
+            </remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.RenameDirectory(System.String,System.String)">
+            <summary>
+            Renames or moves a directory to a new location.
+            </summary>
+            <param name="oldPath">The full path of the directory to rename.</param>
+            <param name="newPath">The new full path of the directory.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>
+            If <paramref name="oldPath"/> and <paramref name="newPath"/> are the same, this function does nothing and returns <see cref="P:LibHac.Result.Success"/>.
+            The following <see cref="T:LibHac.Result"/> codes may be returned under certain conditions:
+            
+            <paramref name="oldPath"/> does not exist or is a file: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            <paramref name="newPath"/>'s parent directory does not exist: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            <paramref name="newPath"/> already exists as either a file or directory: <see cref="P:LibHac.Fs.ResultFs.PathAlreadyExists"/>
+            Either <paramref name="oldPath"/> or <paramref name="newPath"/> is a subpath of the other: <see cref="P:LibHac.Fs.ResultFs.DestinationIsSubPathOfSource"/>
+            </remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.GetEntryType(LibHac.Fs.DirectoryEntryType@,System.String)">
+            <summary>
+            Determines whether the specified path is a file or directory, or does not exist.
+            </summary>
+            <param name="entryType">If the operation returns successfully, the <see cref="T:LibHac.Fs.DirectoryEntryType"/> of the file.</param>
+            <param name="path">The full path to check.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>
+            This function operates slightly differently than it does in Horizon OS.
+            Instead of returning <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/> when an entry is missing,
+            the function will return <see cref="F:LibHac.Fs.DirectoryEntryType.NotFound"/>.
+            </remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.GetFreeSpaceSize(System.Int64@,System.String)">
+            <summary>
+            Gets the amount of available free space on a drive, in bytes.
+            </summary>
+            <param name="freeSpace">If the operation returns successfully, the amount of free space available on the drive, in bytes.</param>
+            <param name="path">The path of the drive to query. Unused in almost all cases.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.GetTotalSpaceSize(System.Int64@,System.String)">
+            <summary>
+            Gets the total size of storage space on a drive, in bytes.
+            </summary>
+            <param name="totalSpace">If the operation returns successfully, the total size of the drive, in bytes.</param>
+            <param name="path">The path of the drive to query. Unused in almost all cases.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.OpenFile(LibHac.Fs.IFile@,System.String,LibHac.Fs.OpenMode)">
+            <summary>
+            Opens an <see cref="T:LibHac.Fs.IFile"/> instance for the specified path.
+            </summary>
+            <param name="file">If the operation returns successfully,
+            An <see cref="T:LibHac.Fs.IFile"/> instance for the specified path.</param>
+            <param name="path">The full path of the file to open.</param>
+            <param name="mode">Specifies the access permissions of the created <see cref="T:LibHac.Fs.IFile"/>.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>
+            The following <see cref="T:LibHac.Result"/> codes may be returned under certain conditions:
+            
+            The specified path does not exist or is a directory: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            </remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.OpenDirectory(LibHac.Fs.IDirectory@,System.String,LibHac.Fs.OpenDirectoryMode)">
+            <summary>
+            Creates an <see cref="T:LibHac.Fs.IDirectory"/> instance for enumerating the specified directory.
+            </summary>
+            <param name="directory">If the operation returns successfully,
+            An <see cref="T:LibHac.Fs.IDirectory"/> instance for the specified directory.</param>
+            <param name="path">The directory's full path.</param>
+            <param name="mode">Specifies which sub-entries should be enumerated.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>
+            The following <see cref="T:LibHac.Result"/> codes may be returned under certain conditions:
+            
+            The specified path does not exist or is a file: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            </remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.Commit">
+            <summary>
+            Commits any changes to a transactional file system.
+            Does nothing if called on a non-transactional file system.
+            </summary>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.GetFileTimeStampRaw(LibHac.Fs.FileTimeStampRaw@,System.String)">
+            <summary>
+            Gets the creation, last accessed, and last modified timestamps of a file or directory.
+            </summary>
+            <param name="timeStamp">If the operation returns successfully, the timestamps for the specified file or directory.
+            These value are expressed as Unix timestamps.</param>
+            <param name="path">The path of the file or directory.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+            <remarks>
+            The following <see cref="T:LibHac.Result"/> codes may be returned under certain conditions:
+            
+            The specified path does not exist: <see cref="P:LibHac.Fs.ResultFs.PathNotFound"/>
+            </remarks>
+        </member>
+        <member name="M:LibHac.Fs.IFileSystem.QueryEntry(System.Span{System.Byte},System.ReadOnlySpan{System.Byte},LibHac.Fs.QueryId,System.String)">
+            <summary>
+            Performs a query on the specified file.
+            </summary>
+            <remarks>This method allows implementers of <see cref="T:LibHac.Fs.IFileSystem"/> to accept queries and operations
+            not included in the IFileSystem interface itself.</remarks>
+            <param name="outBuffer">The buffer for receiving data from the query operation.
+            May be unused depending on the query type.</param>
+            <param name="inBuffer">The buffer for sending data to the query operation.
+            May be unused depending on the query type.</param>
+            <param name="queryId">The type of query to perform.</param>
+            <param name="path">The full path of the file to query.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+        </member>
+        <member name="T:LibHac.Fs.OpenDirectoryMode">
+            <summary>
+            Specifies which types of entries are returned when enumerating an <see cref="T:LibHac.Fs.IDirectory"/>.
+            </summary>
+        </member>
+        <member name="T:LibHac.Fs.CreateFileOptions">
+            <summary>
+            Optional file creation flags.
+            </summary>
+        </member>
+        <member name="F:LibHac.Fs.CreateFileOptions.CreateConcatenationFile">
+            <summary>
+            On a <see cref="T:LibHac.FsSystem.ConcatenationFileSystem"/>, creates a concatenation file.
+            </summary>
+        </member>
+        <member name="F:LibHac.Fs.QueryId.MakeConcatFile">
+            <summary>
+            Turns a folder in a <see cref="T:LibHac.FsSystem.ConcatenationFileSystem"/> into a concatenation file by
+            setting the directory's archive flag.
+            </summary>
+        </member>
+        <member name="T:LibHac.Fs.IStorage">
+            <summary>
+            Provides an interface for reading and writing a sequence of bytes.
+            </summary>
+        </member>
+        <member name="M:LibHac.Fs.IStorage.Read(System.Int64,System.Span{System.Byte})">
+            <summary>
+            Reads a sequence of bytes from the current <see cref="T:LibHac.Fs.IStorage"/>.
+            </summary>
+            <param name="destination">The buffer where the read bytes will be stored.
+            The number of bytes read will be equal to the length of the buffer.</param>
+            <param name="offset">The offset in the <see cref="T:LibHac.Fs.IStorage"/> at which to begin reading.</param>
+            <exception cref="T:System.ArgumentException">Invalid offset or the IStorage contains fewer bytes than requested. </exception>
+        </member>
+        <member name="M:LibHac.Fs.IStorage.Write(System.Int64,System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Writes a sequence of bytes to the current <see cref="T:LibHac.Fs.IStorage"/>.
+            </summary>
+            <param name="source">The buffer containing the bytes to be written.</param>
+            <param name="offset">The offset in the <see cref="T:LibHac.Fs.IStorage"/> at which to begin writing.</param>
+            <exception cref="T:System.ArgumentException">Invalid offset or <paramref name="source"/>
+            is too large to be written to the IStorage. </exception>
+        </member>
+        <member name="M:LibHac.Fs.IStorage.Flush">
+            <summary>
+            Causes any buffered data to be written to the underlying device.
+            </summary>
+        </member>
+        <member name="M:LibHac.Fs.IStorage.SetSize(System.Int64)">
+            <summary>
+            Sets the size of the current IStorage.
+            </summary>
+            <param name="size">The desired size of the current IStorage in bytes.</param>
+        </member>
+        <member name="M:LibHac.Fs.IStorage.GetSize(System.Int64@)">
+            <summary>
+            The size of the<see cref="T:LibHac.Fs.IStorage"/>. -1 will be returned if
+            the <see cref="T:LibHac.Fs.IStorage"/> cannot be represented as a sequence of contiguous bytes.
+            </summary>
+            <returns>The size of the <see cref="T:LibHac.Fs.IStorage"/> in bytes.</returns>
+        </member>
+        <member name="M:LibHac.Fs.IStorage.OperateRange(System.Span{System.Byte},LibHac.Fs.OperationId,System.Int64,System.Int64,System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Performs various operations on the file. Used to extend the functionality of the <see cref="T:LibHac.Fs.IStorage"/> interface.
+            </summary>
+            <param name="outBuffer">A buffer that will contain the response from the operation.</param>
+            <param name="operationId">The operation to be performed.</param>
+            <param name="offset">The offset of the range to operate on.</param>
+            <param name="size">The size of the range to operate on.</param>
+            <param name="inBuffer">An input buffer. Size may vary depending on the operation performed.</param>
+            <returns>The <see cref="T:LibHac.Result"/> of the requested operation.</returns>
+        </member>
+        <member name="T:LibHac.Fs.SdCardAccessLog">
+            <summary>
+            The default access logger that will output to the SD card via <see cref="T:LibHac.FsService.FileSystemProxy"/>.
+            </summary>
+        </member>
+        <member name="P:LibHac.HorizonResultException.ResultValue">
+            <summary>
+            The result code of the error.
+            </summary>
+        </member>
+        <member name="P:LibHac.HorizonResultException.InternalResultValue">
+            <summary>
+            The original, internal result code if it was converted to a more general external result code.
+            </summary>
+        </member>
+        <member name="M:LibHac.HorizonResultException.#ctor(LibHac.Result)">
+            <summary>
+            Initializes a new instance of the <see cref="T:LibHac.HorizonResultException"/> class. 
+            </summary>
+            <param name="result">The result code for the reason for the exception.</param>
+        </member>
+        <member name="M:LibHac.HorizonResultException.#ctor(LibHac.Result,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:LibHac.HorizonResultException"/> class with a specified error message.
+            </summary>
+            <param name="result">The result code for the reason for the exception.</param>
+            <param name="message">The error message that explains the reason for the exception.</param>
+        </member>
+        <member name="M:LibHac.HorizonResultException.#ctor(LibHac.Result,System.String,System.Exception)">
+            <summary>
+             Initializes a new instance of the <see cref="T:LibHac.HorizonResultException"/> class with a specified error message
+             and a reference to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="result">The result code for the reason for the exception.</param>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
+        </member>
+        <member name="M:LibHac.HorizonResultException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:LibHac.MissingKeyException"/> class with serialized data.
+            </summary>
+            <param name="info">The <see cref="T:System.Runtime.Serialization.SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+            <param name="context">The <see cref="T:System.Runtime.Serialization.StreamingContext"/>  that contains contextual information about the source or destination.</param>
+        </member>
+        <member name="M:LibHac.IProgressReport.Report(System.Int64)">
+            <summary>
+            Sets the current value of the <see cref="T:LibHac.IProgressReport"/> to <paramref name="value"/>.
+            </summary>
+            <param name="value">The value to set.</param>
+        </member>
+        <member name="M:LibHac.IProgressReport.ReportAdd(System.Int64)">
+            <summary>
+            Adds <paramref name="value"/> to the current value of the <see cref="T:LibHac.IProgressReport"/>.
+            </summary>
+            <param name="value">The amount to add.</param>
+        </member>
+        <member name="M:LibHac.IProgressReport.SetTotal(System.Int64)">
+            <summary>
+            Sets the maximum value of the <see cref="T:LibHac.IProgressReport"/> to <paramref name="value"/>.
+            </summary>
+            <param name="value">The maximum value to set.</param>
+        </member>
+        <member name="M:LibHac.IProgressReport.LogMessage(System.String)">
+            <summary>
+            Logs a message to the <see cref="T:LibHac.IProgressReport"/> object.
+            </summary>
+            <param name="message">The message to output.</param>
+        </member>
+        <member name="F:LibHac.Keyset.UsedKeyblobCount">
+            <summary>
+            The number of keyblobs that were used for &lt; 6.2.0 crypto
+            </summary>
+        </member>
+        <member name="T:LibHac.Kvdb.GenericValue">
+            <summary>
+            A class for handling any value used by <see cref="T:LibHac.Kvdb.KeyValueDatabase`2"/>
+            </summary>
+        </member>
+        <member name="M:LibHac.Kvdb.IExportable.Freeze">
+            <summary>
+            Prevent further modification of this object.
+            </summary>
+        </member>
+        <member name="T:LibHac.LibHacException">
+            <summary>
+            This is the exception that is thrown when an error occurs 
+            </summary>
+        </member>
+        <member name="M:LibHac.LibHacException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:LibHac.LibHacException"/> class. 
+            </summary>
+        </member>
+        <member name="M:LibHac.LibHacException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:LibHac.LibHacException"/> class with a specified error message.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+        </member>
+        <member name="M:LibHac.LibHacException.#ctor(System.String,System.Exception)">
+            <summary>
+             Initializes a new instance of the <see cref="T:LibHac.LibHacException"/> class with a specified error message
+             and a reference to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
+        </member>
+        <member name="M:LibHac.LibHacException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:LibHac.LibHacException"/> class with serialized data.
+            </summary>
+            <param name="info">The <see cref="T:System.Runtime.Serialization.SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+            <param name="context">The <see cref="T:System.Runtime.Serialization.StreamingContext"/>  that contains contextual information about the source or destination.</param>
+        </member>
+        <member name="T:LibHac.MissingKeyException">
+            <summary>
+            This is the exception that is thrown when an action requires a key that is not found in the provided keyset.
+            </summary>
+        </member>
+        <member name="P:LibHac.MissingKeyException.Name">
+            <summary>
+            The name of the key that is missing.
+            </summary>
+        </member>
+        <member name="P:LibHac.MissingKeyException.Type">
+            <summary>
+            The type of the key that is missing.
+            </summary>
+        </member>
+        <member name="M:LibHac.MissingKeyException.#ctor(System.String,System.String,LibHac.KeyType)">
+            <summary>
+             Initializes a new instance of the <see cref="T:LibHac.MissingKeyException"/> class with a specified error message,
+             information about the missing key and a reference to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="name">The name of the key that is missing, or the rights ID of the missing key if <paramref name="keyType"/> is <see cref="F:LibHac.KeyType.Title"/></param>
+            <param name="keyType">The <see cref="T:LibHac.KeyType"/> of the key that is missing.</param>
+        </member>
+        <member name="M:LibHac.MissingKeyException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:LibHac.MissingKeyException"/> class. 
+            </summary>
+        </member>
+        <member name="M:LibHac.MissingKeyException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:LibHac.MissingKeyException"/> class with a specified error message.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+        </member>
+        <member name="M:LibHac.MissingKeyException.#ctor(System.String,System.Exception)">
+            <summary>
+             Initializes a new instance of the <see cref="T:LibHac.MissingKeyException"/> class with a specified error message
+             and a reference to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
+        </member>
+        <member name="M:LibHac.MissingKeyException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:LibHac.MissingKeyException"/> class with serialized data.
+            </summary>
+            <param name="info">The <see cref="T:System.Runtime.Serialization.SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+            <param name="context">The <see cref="T:System.Runtime.Serialization.StreamingContext"/>  that contains contextual information about the source or destination.</param>
+        </member>
+        <member name="M:LibHac.Result.Log">
+            <summary>
+            A function that can contain code for logging or debugging returned results.
+            Intended to be used when returning a non-zero Result:
+            <code>return result.Log();</code>
+            </summary>
+            <returns>The called <see cref="T:LibHac.Result"/> value.</returns>
+        </member>
+        <member name="M:LibHac.Util.StringSpansEqual(System.ReadOnlySpan{System.Byte},System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Compares two strings stored int byte spans. For the strings to be equal,
+            they must terminate in the same place.
+            A string can be terminated by either a null character or the end of the span.
+            </summary>
+            <param name="s1">The first string to be compared.</param>
+            <param name="s2">The first string to be compared.</param>
+            <returns><see langword="true"/> if the strings are equal;
+            otherwise <see langword="false"/>.</returns>
+        </member>
+    </members>
+</doc>

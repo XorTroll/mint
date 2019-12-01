@@ -1,4 +1,5 @@
 
+#pragma once
 #include <js>
 
 namespace console

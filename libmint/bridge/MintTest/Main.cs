@@ -7,15 +7,13 @@ namespace MintTest
     {
         public static void Main()
         {
-            // Out variables work :)
-            Switch.Applet.Test(out var res);
-
             Switch.Console.Initialize();
+            var res = new Switch.Result(0x4A8);
 
             QuickJS.Std.PrintF("Hello from C#!\nConsole initialized: %d\n", Switch.Console.IsInitialized());
             Switch.Console.Flush();
 
-            QuickJS.Std.PrintF($"Got value: {res:X}");
+            QuickJS.Std.PrintF($"Result info:\n- Module: {res.Module}\n- Description: {res.Description}\n- IsSuccess: {res.IsSuccess}\n- Hex value: {res.Value:X}");
             Switch.Console.Flush();
 
             while (true) ;

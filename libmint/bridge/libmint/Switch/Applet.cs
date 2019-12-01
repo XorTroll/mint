@@ -20,8 +20,5 @@ namespace Switch
     {
         [Name("getAppletType")]
         public static extern AppletType GetAppletType();
-
-        [Name("outTest")]
-        public static extern void Test(out uint res);
     }
 }

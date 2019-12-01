@@ -1,5 +1,6 @@
 
 #pragma once
+#include <global.hpp>
 #include <console.hpp>
 #include <applet.hpp>
 
@@ -7,6 +8,7 @@ namespace libmint
 {
     inline void InitializeModules()
     {
+        global::Initialize();
         console::InitializeModule();
         applet::InitializeModule();
     }

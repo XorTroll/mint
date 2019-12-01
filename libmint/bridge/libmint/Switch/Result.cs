@@ -1,55 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Bridge;
 
 namespace Switch
 {
+    [External]
+    [Name("Result")]
     public class Result
     {
-        public uint Module
-        {
-            get => UnpackValueModule(Value);
+        public extern Result(uint Value);
 
-            set => Value = PackValue(value, Description);
-        }
+        [Name("value")]
+        public extern uint Value { get; set; }
 
-        public uint Description
-        {
-            get => UnpackValueDescription(Value);
+        [Name("module")]
+        public extern uint Module { get; set; }
 
-            set => Value = PackValue(Module, value);
-        }
+        [Name("description")]
+        public extern uint Description { get; set; }
 
-        public uint Value { get; set; }
+        [Name("isSuccess")]
+        public extern bool IsSuccess { get; }
 
-        public bool IsSuccess
-        {
-            get => Value == 0;
-        }
-
-        public bool IsFailure
-        {
-            get => !IsSuccess;
-        }
-
-        public Result(uint full_value)
-        {
-            Value = full_value;
-        }
-
-        public static implicit operator Result(uint val) => new Result(val);
-
-        public override string ToString()
-        {
-            return $"{Module + 2000:0000}-{Description:0000}";
-        }
-
-        public static uint UnpackValueModule(uint val) => (val) & 0x1FF;
-
-        public static uint UnpackValueDescription(uint val) => ((val) >> 9) & 0x1FFF;
-
-        public static uint PackValue(uint mod, uint desc) => ((mod) & 0x1FF) | ((desc) & 0x1FFF) << 9;
+        [Name("isFailure")]
+        public extern bool IsFailure { get; }
     }
 }

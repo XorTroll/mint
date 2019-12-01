@@ -44,8 +44,12 @@ namespace console
     JS_MODULE_EXPORT_NATIVE_FN(clear)
     JS_MODULE_DECLARE_END(console)
 
+    JS_MODULE_INIT_ROUTINE_START(console)
+    JS_MODULE_INIT_ROUTINE_END
+
     void InitializeModule()
     {
-        JS_PUSH_MODULE(console)
+        JS_MODULE_INCLUDE_START(console)
+        JS_MODULE_INCLUDE_END(console)
     }
 }

@@ -14,9 +14,13 @@ extern "C"
     #include <quickjs/cutils.h>
     #include <quickjs/quickjs-libc.h>
 
+    typedef JSValue JSCGetterFunction(JSContext *ctx, JSValueConst this_val);
+    typedef JSValue JSCSetterFunction(JSContext *ctx, JSValueConst this_val, JSValueConst val);
+
     JSCFunctionListEntry __js_C_MakeNativeFunctionImpl(JSCFunction *fn, const char *name, int count);
     JSCFunctionListEntry __js_C_MakeStringPropertyImpl(const char *name, const char *val, int flags);
     JSCFunctionListEntry __js_C_MakeNumberPropertyImpl(const char *name, double val, int flags);
+    JSCFunctionListEntry __js_C_MakeGetterSetterImpl(const char *name, JSCGetterFunction *getter, JSCSetterFunction *setter);
 }
 
 namespace js
@@ -28,11 +32,6 @@ namespace js
     {
         void *buf;
         size_t size;
-
-        static inline constexpr Buffer Make(void *buf, size_t size)
-        {
-            return { buf, size };
-        }
     };
 
     class Reference
@@ -64,10 +63,22 @@ namespace js
 
         std::string EvalFileImpl(std::string path);
 
+        template<typename C>
+        struct ClassObjectBuilder
+        {
+            static JSValue Impl(JSContext *ctx, JSClassID id, C *instance_ptr)
+            {
+                auto instance = JS_NewObjectClass(ctx, id);
+                JS_SetOpaque(instance, (void*)instance_ptr);
+                return instance;
+            }
+        };
+
         template<typename T>
         T UnpackImpl(JSContext *ctx, JSValue val)
         {
             if constexpr(std::is_same<T, const char*>::value || std::is_same<T, std::string>::value) return JS_ToCString(ctx, val);
+            else if constexpr(std::is_same<T, bool>::value) return (bool)JS_ToBool(ctx, val);
             else if constexpr(std::is_arithmetic<T>::value)
             {
                 double ret = 0.0f;
@@ -90,6 +101,7 @@ namespace js
         {
             if constexpr(std::is_same<T, const char*>::value) return JS_NewString(ctx, t);
             else if constexpr(std::is_same<T, std::string>::value) return JS_NewString(ctx, t.c_str());
+            else if constexpr(std::is_same<T, bool>::value) return JS_NewBool(ctx, t);
             else if constexpr(std::is_arithmetic<T>::value) return JS_NewFloat64(ctx, (double)t);
             else if constexpr(std::is_same<js::Buffer, T>::value) return JS_NewArrayBufferCopy(ctx, (const u8*)t.buf, t.size);
             else if constexpr(std::is_same<JSValue, T>::value) return t;
@@ -149,8 +161,8 @@ namespace js
             }
         };
 
-        template<typename Ret, typename ...Ts>
-        std::tuple<Ts...> ProcessParamsImpl(JsFunctionHelper &helper, std::function<Ret(Ts...)> &fn)
+        template<typename ...Ts>
+        std::tuple<Ts...> ProcessParamsImpl(JsFunctionHelper &helper)
         {
             std::tuple<Ts...> tpl;
             ProcessValues<Ts...>::Impl(helper, tpl);
@@ -191,7 +203,7 @@ namespace js
                 if constexpr(sizeof...(Ts) == 0) fn();
                 else
                 {
-                    auto params = ProcessParamsImpl(helper, fn);
+                    auto params = ProcessParamsImpl<Ts...>(helper);
                     std::apply(fn, params);
                 }
                 return Undefined;
@@ -210,11 +222,38 @@ namespace js
                 }
                 else
                 {
-                    auto params = ProcessParamsImpl(helper, fn);
+                    auto params = ProcessParamsImpl<Ts...>(helper);
                     auto res = std::apply(fn, params);
                     return res;
                 }
                 return Ret();
+            }
+        };
+
+        template<typename T, typename Tpl, size_t... Idx>
+        constexpr T *NewFromTupleImpl(Tpl&& __t, std::index_sequence<Idx...>)
+        {
+            return new T(std::get<Idx>(std::forward<Tpl>(__t))...);
+        }
+
+        template<typename T, typename Tpl>
+        constexpr T *NewFromTuple(Tpl&& __t)
+        {
+            return NewFromTupleImpl<T>(std::forward<Tpl>(__t), std::make_index_sequence<std::tuple_size_v<std::decay_t<Tpl>>>{});
+        }
+
+        template<typename C, typename ...Ts>
+        struct CallClassCtor
+        {
+            static C *Impl(JsFunctionHelper &helper)
+            {
+                if constexpr(sizeof...(Ts) == 0) return new C();
+                else
+                {
+                    auto params = ProcessParamsImpl<Ts...>(helper);
+                    return NewFromTuple<C>(params);
+                }
+                return NULL;
             }
         };
 
@@ -259,38 +298,147 @@ namespace js
     std::string Evaluate(std::string js_src, std::string eval_name);
     std::string EvaluateFromFile(std::string path);
 
+    #define JS_CLASS_REF(name) extern JSClassID __js_class_##name;
+
+    #define JS_FN_MAKE_ARRAYBUFFER(ptr, len) (js::Buffer){ ptr, len }
+    #define JS_FN_CREATE_INSTANCE(cls, ...) js::impl::ClassObjectBuilder<cls>::Impl(js::impl::GetCoreContextImpl(), __js_class_##cls, new cls(__VA_ARGS__))
+    #define JS_FN_MAKE_INSTANCE(cls, ptr) js::impl::ClassObjectBuilder<cls>::Impl(js::impl::GetCoreContextImpl(), __js_class_##cls, ptr)
+    #define JS_FN_CREATE_INSTANCE_M(mod, cls, ...) js::impl::ClassObjectBuilder<mod::cls>::Impl(js::impl::GetCoreContextImpl(), mod::__js_class_##cls, new cls(__VA_ARGS__))
+    #define JS_FN_MAKE_INSTANCE_M(mod, cls, ptr) js::impl::ClassObjectBuilder<mod::cls>::Impl(js::impl::GetCoreContextImpl(), mod::__js_class_##cls, ptr)
+
     #define JS_DEFINE_NATIVE_FN(name, ...) \
-    static size_t __js_fn_len_##name = 0; \
     static JSValue __js_fn_##name(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) \
     { \
         js::impl::JsFunctionHelper helper(ctx, this_val, argc, argv); \
         std::function name = [&] __VA_ARGS__ ; \
-        __js_fn_len_##name = js::impl::ParameterCount<decltype(name)>::Value; \
         auto ret = js::impl::CallNativeFn<decltype(name)>::Impl(helper, name); \
         return js::impl::ProcessReturnImpl(ctx, ret); \
     }
 
-    #define JS_GLOBAL_EXPORT_NATIVE_FN(name) js::impl::PushGlobalFunctionImpl(js::impl::GetCoreContextImpl(), __js_fn_##name, __js_fn_len_##name, #name);
+    #define JS_CLASS_DECLARE(name, ...) \
+    JSClassID __js_class_##name; \
+    static JSValue __js_class_##name##_ctor(JSContext *ctx, JSValue new_target, int argc, JSValueConst *argv) \
+    { \
+        js::impl::JsFunctionHelper helper(ctx, new_target, argc, argv); \
+        name *p = js::impl::CallClassCtor<name, ##__VA_ARGS__>::Impl(helper); \
+        auto prototype = JS_GetPropertyStr(ctx, new_target, "prototype"); \
+        auto instance = JS_NewObjectProtoClass(ctx, prototype, __js_class_##name); \
+        JS_FreeValue(ctx, prototype); \
+        JS_SetOpaque(instance, (void*)p); \
+        return instance; \
+    } \
+    static void __js_class_##name##_dtor(JSRuntime *rt, JSValue val) \
+    { \
+        name *this_ptr = (name*)JS_GetOpaque(val, __js_class_##name); \
+        delete this_ptr; \
+    } \
+    static JSClassDef __js_class_##name##_def = \
+    { \
+        #name, \
+        .finalizer = __js_class_##name##_dtor, \
+    };
+
+    #define _JS_MEMBER_GETTER(name) name##_get
+    #define _JS_MEMBER_SETTER(name) name##_set
+
+    #define JS_CLASS_DECLARE_PROPERTY_GS(class_name, prop_name, type) \
+    static JSValue __js_class_##class_name##_getter_##prop_name(JSContext *ctx, JSValueConst this_val) \
+    { \
+        class_name *this_ptr = (class_name*)JS_GetOpaque2(ctx, this_val, __js_class_##class_name); \
+        auto value = js::impl::PackImpl<type>(ctx, this_ptr->_JS_MEMBER_GETTER(prop_name)()); \
+        return value; \
+    } \
+    static JSValue __js_class_##class_name##_setter_##prop_name(JSContext *ctx, JSValueConst this_val, JSValue val) \
+    { \
+        class_name *this_ptr = (class_name*)JS_GetOpaque2(ctx, this_val, __js_class_##class_name); \
+        auto value = js::impl::UnpackImpl<type>(ctx, val); \
+        this_ptr->_JS_MEMBER_SETTER(prop_name)(value); \
+        return js::Undefined; \
+    }
+
+    #define JS_CLASS_DECLARE_PROPERTY_G(class_name, prop_name, type) \
+    static JSValue __js_class_##class_name##_getter_##prop_name(JSContext *ctx, JSValueConst this_val) \
+    { \
+        class_name *this_ptr = (class_name*)JS_GetOpaque2(ctx, this_val, __js_class_##class_name); \
+        auto value = js::impl::PackImpl<type>(ctx, this_ptr->_JS_MEMBER_GETTER(prop_name)()); \
+        return value; \
+    }
+
+    #define JS_CLASS_DECLARE_PROPERTY_S(class_name, prop_name, type) \
+    static JSValue __js_class_##class_name##_setter_##prop_name(JSContext *ctx, JSValueConst this_val, JSValue val) \
+    { \
+        class_name *this_ptr = (class_name*)JS_GetOpaque2(ctx, this_val, __js_class_##class_name); \
+        auto value = js::impl::UnpackImpl<type>(ctx, val); \
+        this_ptr->_JS_MEMBER_SETTER(prop_name)(value); \
+        return js::Undefined; \
+    }
+
+    #define JS_CLASS_DECLARE_MEMBER_FN(class_name, fn_name) \
+    static JSValue __js_class_##class_name##_##fn_name(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) \
+    { \
+        class_name *this_ptr = (class_name*)JS_GetOpaque2(ctx, this_val, __js_class_##class_name); \
+        return js::impl::PackImpl(ctx, this_ptr->fn_name()); \
+    }
+
+    #define JS_CLASS_PROTOTYPE_START(name) static const JSCFunctionListEntry ___js_class_##name##_prototype[] = {
+
+    #define JS_CLASS_PROTOTYPE_EXPORT_PROPERTY_GS(class_name, prop_name) __js_C_MakeGetterSetterImpl(#prop_name, __js_class_##class_name##_getter_##prop_name, __js_class_##class_name##_setter_##prop_name),
+    #define JS_CLASS_PROTOTYPE_EXPORT_PROPERTY_G(class_name, prop_name) __js_C_MakeGetterSetterImpl(#prop_name, __js_class_##class_name##_getter_##prop_name, NULL),
+    #define JS_CLASS_PROTOTYPE_EXPORT_PROPERTY_S(class_name, prop_name) __js_C_MakeGetterSetterImpl(#prop_name, NULL, __js_class_##class_name##_setter_##prop_name),
+    #define JS_CLASS_PROTOTYPE_EXPORT_MEMBER_FN(class_name, fn_name) __js_C_MakeNativeFunctionImpl(__js_class_##class_name##_##fn_name, #fn_name, 0),
+
+    #define JS_CLASS_PROTOTYPE_END };
+
+    // Exports (global/module)
+
+    #define JS_GLOBAL_EXPORT_NATIVE_FN(name) js::impl::PushGlobalFunctionImpl(js::impl::GetCoreContextImpl(), __js_fn_##name, 0, #name);
+
+    #define _JS_GLOBAL_EXPORT_VAL(name, val) JS_SetPropertyStr(js::impl::GetCoreContextImpl(), JS_GetGlobalObject(js::impl::GetCoreContextImpl()), #name, val);
+
+    #define JS_GLOBAL_EXPORT_CLASS(name) \
+    { \
+        auto ctx = js::impl::GetCoreContextImpl(); \
+        JS_NewClassID(&__js_class_##name); \
+        JS_NewClass(JS_GetRuntime(ctx), __js_class_##name, &__js_class_##name##_def); \
+        JSValue prototype = JS_NewObject(ctx); \
+        JS_SetPropertyFunctionList(ctx, prototype, ___js_class_##name##_prototype, countof(___js_class_##name##_prototype)); \
+        JS_SetClassProto(ctx, __js_class_##name, prototype); \
+        JSValue ctor = JS_NewCFunction2(ctx, __js_class_##name##_ctor, #name, 2, JS_CFUNC_constructor, 0); \
+        JS_SetConstructor(ctx, ctor, prototype); \
+        _JS_GLOBAL_EXPORT_VAL(name, ctor) \
+    }
+
+    #define JS_GLOBAL_EXPORT_PROPERTY(name, prop) _JS_GLOBAL_EXPORT_VAL(name, js::impl::PackImpl(js::impl::GetCoreContextImpl(), prop))
 
     #define JS_MODULE_DECLARE_START(mod_name) static const JSCFunctionListEntry __js_mod_export_##mod_name[] = {
 
-    #define JS_MODULE_EXPORT_NATIVE_FN(name) __js_C_MakeNativeFunctionImpl(__js_fn_##name, #name, __js_fn_len_##name),
-    #define JS_MODULE_EXPORT_VARIABLE(name, value) js::impl::MakePropertyImpl<decltype(value)>(#name, value, JS_PROP_C_W_E),
-    #define JS_MODULE_EXPORT_CONSTANT(name, cvalue) js::impl::MakePropertyImpl<decltype(cvalue)>(#name, cvalue, JS_PROP_CONFIGURABLE),
-    #define JS_MODULE_DECLARE_END(mod_name) }; \
-    static int __js_mod_init_##mod_name(JSContext *ctx, JSModuleDef *mod) \
-    { \
-        return JS_SetModuleExportList(ctx, mod, __js_mod_export_##mod_name, countof(__js_mod_export_##mod_name)); \
-    }
+    #define JS_MODULE_EXPORT_NATIVE_FN(name) __js_C_MakeNativeFunctionImpl(__js_fn_##name, #name, 0),
+    #define JS_MODULE_DECLARE_END(mod_name) };
 
-    #define JS_PUSH_MODULE(mod_name) \
-    { \
+    #define JS_MODULE_INIT_ROUTINE_START(name) static int __js_mod_init_##name(JSContext *ctx, JSModuleDef *mod) { JS_SetModuleExportList(ctx, mod, __js_mod_export_##name, countof(__js_mod_export_##name));
+    #define JS_MODULE_INIT_ROUTINE_EXPORT_CLASS(name) \
+    JS_NewClassID(&__js_class_##name); \
+    JS_NewClass(JS_GetRuntime(ctx), __js_class_##name, &__js_class_##name##_def); \
+    JSValue prototype = JS_NewObject(ctx); \
+    JS_SetPropertyFunctionList(ctx, prototype, ___js_class_##name##_prototype, countof(___js_class_##name##_prototype)); \
+    JS_SetClassProto(ctx, __js_class_##name, prototype); \
+    JSValue ctor = JS_NewCFunction2(ctx, __js_class_##name##_ctor, #name, 2, JS_CFUNC_constructor, 0); \
+    JS_SetConstructor(ctx, ctor, prototype); \
+    JS_SetModuleExport(ctx, mod, #name, ctor); \
+
+    #define JS_MODULE_INIT_ROUTINE_EXPORT_PROPERTY(name, prop) JS_SetModuleExport(ctx, mod, #name, js::impl::PackImpl(ctx, prop));
+
+    #define JS_MODULE_INIT_ROUTINE_END return 0; }
+
+    #define JS_MODULE_INCLUDE_START(mod_name) { \
         auto ctx = js::impl::GetCoreContextImpl(); \
-        auto mod = JS_NewCModule(ctx, #mod_name, __js_mod_init_##mod_name); \
-        if(mod != NULL) \
-        { \
-            JS_AddModuleExportList(ctx, mod, __js_mod_export_##mod_name, countof(__js_mod_export_##mod_name)); \
-            js::impl::ImportModuleImpl(#mod_name); \
-        } \
-    }
+        auto __js_module_##mod_name = JS_NewCModule(ctx, #mod_name, __js_mod_init_##mod_name); \
+        if(__js_module_##mod_name != NULL) { JS_AddModuleExportList(ctx, __js_module_##mod_name, __js_mod_export_##mod_name, countof(__js_mod_export_##mod_name)); }
+
+    #define _JS_BASE_EXPORT(mod_name, export_name) if(__js_module_##mod_name != NULL) { JS_AddModuleExport(ctx, __js_module_##mod_name, #export_name); }
+
+    #define JS_MODULE_INCLUDE_CLASS(mod_name, class_name) _JS_BASE_EXPORT(mod_name, class_name)
+    #define JS_MODULE_INCLUDE_PROPERTY(mod_name, prop_name) _JS_BASE_EXPORT(mod_name, prop_name)
+
+    #define JS_MODULE_INCLUDE_END(mod_name) if(__js_module_##mod_name != NULL) { js::impl::ImportModuleImpl(#mod_name); } }
 }

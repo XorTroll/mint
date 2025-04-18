@@ -8,15 +8,20 @@ namespace MintTest
         public static void Main()
         {
             Switch.Console.Initialize();
-            var res = new Switch.Result(0x4A8);
 
-            QuickJS.Std.PrintF("Hello from C#!\nConsole initialized: %d\n", Switch.Console.IsInitialized());
-            Switch.Console.Flush();
+            QuickJS.Std.PrintF("Hello world!\n");
 
-            QuickJS.Std.PrintF($"Result info:\n- Module: {res.Module}\n- Description: {res.Description}\n- IsSuccess: {res.IsSuccess}\n- Hex value: {res.Value:X}");
-            Switch.Console.Flush();
+            while (Switch.Applet.MainLoop())
+            {
+                var keys = Switch.Hid.GetKeysHeld(Switch.Controller.Auto);
+                if((keys & Switch.Keys.Plus) != 0)
+                {
+                    QuickJS.Std.PrintF("Matches...\n");
+                }
+                Switch.Console.Flush();
+            }
 
-            while (true) ;
+            Switch.Console.Exit();
         }
     }
 }

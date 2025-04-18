@@ -40,6 +40,7 @@
     <Compile Include="QuickJS\Std.cs" />
     <Compile Include="Switch\Applet.cs" />
     <Compile Include="Switch\Console.cs" />
+    <Compile Include="Switch\Hid.cs" />
     <Compile Include="Switch\Result.cs" />
   </ItemGroup>
   <ItemGroup>

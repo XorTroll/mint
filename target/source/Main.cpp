@@ -6,8 +6,15 @@
 
 using JSON = nlohmann::json;
 
+void Cleanup()
+{
+    romfsExit();
+    js::Finalize();
+}
+
 void ThrowCritical(std::string err)
 {
+    consoleExit(NULL);
     consoleInit(NULL);
     printf("\nMint runtime\n  -----------------------------------------------------------  \nA critical error ocurred:\n" CONSOLE_RED "%s" CONSOLE_RESET "\n\nPress any key to exit.", err.c_str());
     consoleUpdate(NULL);
@@ -17,6 +24,7 @@ void ThrowCritical(std::string err)
         if(hidKeysDown(CONTROLLER_P1_AUTO)) break;
     }
     consoleExit(NULL);
+    Cleanup();
     exit(0);
 }
 
@@ -24,7 +32,7 @@ int main()
 {
     js::Initialize();
 
-    // Initialize QuickJS's modules
+    // Initialize QuickJS's ('std' and 'os') modules
     js::PushQuickJSModules();
     
     // Push custom modules
@@ -44,10 +52,10 @@ int main()
         struct stat st;
         if(stat(("romfs:/.mint/src/" + fscript).c_str(), &st) != 0) ThrowCritical("A listed script file was not found: '" + fscript + "'");
 
-        auto rsp = js::EvaluateFromFile("romfs:/.mint/src/" + fscript);
+        js::EvaluateFromFile("romfs:/.mint/src/" + fscript);
     }
 
-    romfsExit();
-
-    js::Finalize();
+    // After executing the project, proper cleanup
+    Cleanup();
+    return 0;
 }

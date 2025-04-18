@@ -1,20 +1,20 @@
-﻿using Bridge;
-using System;
+﻿using System;
 
 namespace [mintc-dummy-project]
 {
-    [Namespace(false)]
-    public class MintMain
+    public class Main
     {
-        [External]
-        [Template("demo_test({txt})")]
-        public extern static void DemoTest(string txt);
-
         public static void Main()
         {
-            DemoTest("Welcome to Bridge.NET!");
+            Switch.Console.Initialize();
 
-            while (true) ;
+            QuickJS.Std.PrintF($"Hello from C#!\nConsole initialized: {Switch.Console.IsInitialized()}\n");
+            
+
+            while(true)
+            {
+            Switch.Console.Flush();
+        }
         }
     }
 }

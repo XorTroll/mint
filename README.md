@@ -2,7 +2,7 @@
 
 > Simple ecosystem for creating and compiling Visual Studio C# projects as Nintendo Switch homebrew, via Bridge.NET and QuickJS
 
-**IMPORTANT!** This project is a work-in-progress, so it isn't completely ready to be used by anyone yet.
+## **IMPORTANT!** This project is no longer continued.
 
 ## Parts
 

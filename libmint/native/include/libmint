@@ -3,6 +3,7 @@
 #include <global.hpp>
 #include <console.hpp>
 #include <applet.hpp>
+#include <hid.hpp>
 
 namespace libmint
 {
@@ -11,5 +12,6 @@ namespace libmint
         global::Initialize();
         console::InitializeModule();
         applet::InitializeModule();
+        hid::InitializeModule();
     }
 }

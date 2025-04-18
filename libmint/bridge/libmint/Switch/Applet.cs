@@ -18,6 +18,9 @@ namespace Switch
     [Name("applet")]
     public static class Applet
     {
+        [Name("mainLoop")]
+        public static extern bool MainLoop();
+
         [Name("getAppletType")]
         public static extern AppletType GetAppletType();
     }

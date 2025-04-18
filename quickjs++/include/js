@@ -295,8 +295,8 @@ namespace js
 
     void PushQuickJSModules();
 
-    std::string Evaluate(std::string js_src, std::string eval_name);
-    std::string EvaluateFromFile(std::string path);
+    std::string Evaluate(std::string js_src, std::string eval_name, int mode = JS_EVAL_TYPE_GLOBAL);
+    std::string EvaluateFromFile(std::string path, int mode = JS_EVAL_TYPE_GLOBAL);
 
     #define JS_CLASS_REF(name) extern JSClassID __js_class_##name;
 
